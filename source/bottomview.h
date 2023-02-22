@@ -33,7 +33,7 @@ private:
 
 	static const std::array<const char *, 4> m_tabs;
 
-	dirent **m_directory_listing;
+	dirent **m_directory_listing{nullptr};
 	int m_directory_entries{0};
 
 	int m_scroll{0};

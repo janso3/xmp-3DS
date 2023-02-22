@@ -262,12 +262,10 @@ static int MyDirentCompare(const dirent **a, const dirent **b)
 bool BottomView::UpdateDirectoryListing()
 {
 	FreeDirectoryListing();
-
 	m_directory_entries = scandir(".", &m_directory_listing, NULL, MyDirentCompare);
-
 	if (m_directory_entries < 0)
 	{
-		m_directory_listing = NULL;
+		m_directory_listing = nullptr;
 		return false;
 	}
 
@@ -276,10 +274,12 @@ bool BottomView::UpdateDirectoryListing()
 
 void BottomView::FreeDirectoryListing()
 {
-	if (m_directory_entries > 0)
+	if (m_directory_listing)
 	{
 		for (int i = 0; i < m_directory_entries; ++i)
 			free(m_directory_listing[i]);
 		free(m_directory_listing);
+		m_directory_entries = 0;
+		m_directory_listing = nullptr;
 	}
 }
