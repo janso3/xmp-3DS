@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	gfxInitDefault();
 
 	PrintConsole top_screen, bottom_screen;
@@ -16,7 +17,7 @@ int main(int argc, char **argv) {
 	consoleInit(GFX_TOP, &top_screen);
 	consoleInit(GFX_BOTTOM, &bottom_screen);
 
-	auto& player = Player::the();
+	auto &player = Player::the();
 
 	PatternView pattern_view;
 
@@ -25,15 +26,16 @@ int main(int argc, char **argv) {
 
 	hidSetRepeatParameters(20, 5);
 
-	while (aptMainLoop()) {
+	while (aptMainLoop())
+	{
 		hidScanInput();
-        u32 kDown = hidKeysDown();
+		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysDownRepeat();
 
 		if (kDown & KEY_START)
 			break;
 
-		if (kDown & KEY_SELECT) 
+		if (kDown & KEY_SELECT)
 			player.TogglePause();
 
 		if (kHeld & KEY_DLEFT)
@@ -55,8 +57,10 @@ int main(int argc, char **argv) {
 			bottom_view.PrevPage();
 		if (kDown & KEY_R)
 			bottom_view.NextPage();
-		if (kDown & KEY_A) {
-			if (bottom_view.Select()) {
+		if (kDown & KEY_A)
+		{
+			if (bottom_view.Select())
+			{
 				consoleSelect(&top_screen);
 				pattern_view.Invalidate();
 			}
@@ -74,4 +78,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-

@@ -4,7 +4,8 @@
 #include <array>
 #include <string>
 
-class BottomView {
+class BottomView
+{
 public:
 	BottomView();
 	~BottomView();
@@ -26,10 +27,9 @@ private:
 
 	xmp_module_info *m_info;
 
-	static const std::array<const char*, 4> m_tabs;
+	static const std::array<const char *, 4> m_tabs;
 
-	int m_num_files { 0 };
-	int m_scroll { 0 };
-	int m_selection { 0 };
+	int m_num_files{0};
+	int m_scroll{0};
+	int m_selection{0};
 };
-

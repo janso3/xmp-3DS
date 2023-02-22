@@ -4,7 +4,8 @@
 #include <string>
 #include <array>
 
-class PatternView {
+class PatternView
+{
 public:
 	PatternView();
 	~PatternView();
@@ -18,8 +19,8 @@ public:
 private:
 	xmp_module_info *m_info;
 
-	int m_channel_scroll { 0 };
-	int m_last_row { 0 };
+	int m_channel_scroll{0};
+	int m_last_row{0};
 
 	static constexpr size_t MAX_NOTES = 120;
 	std::array<std::string, MAX_NOTES> m_notes;
