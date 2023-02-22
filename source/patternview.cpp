@@ -41,7 +41,7 @@ void PatternView::Render()
 	for (int i = 0; i < 8; ++i)
 	{
 		int channel = m_channel_scroll + i;
-		if (channel >= chn + 8)
+		if (channel >= chn)
 			break;
 		printf("[%02d ]%s", channel, i == 7 ? "" : " ");
 	}
