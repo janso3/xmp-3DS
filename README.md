@@ -3,4 +3,4 @@ A Nintendo 3DS front-end for the [Extended Module Player](https://xmp.sourceforg
 
 It lets you load tracker modules from the SD-card and includes a real-time pattern visualization.
 
-![shot](https://user-images.githubusercontent.com/25061393/220178232-2c9cf0c5-e27e-4484-9df9-0e807300f7ad.png)
+![tracker](https://user-images.githubusercontent.com/25061393/220495242-619cb014-24e1-4660-837a-3bf132744499.gif)
