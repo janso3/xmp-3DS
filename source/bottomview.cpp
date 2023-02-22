@@ -174,16 +174,24 @@ void BottomView::RenderLoadMenu()
 void BottomView::RenderInfo()
 {
 	printf("\x1b[0;0H");
-	if (Player::the().HasLoadedModule())
+
+	auto &player = Player::the();
+	if (player.HasLoadedModule())
 	{
-		auto info = Player::the().GetModuleInfo();
+		auto info = player.GetModuleInfo();
 		auto *mod = info.mod;
 
-		printf("Name: %s\nType: %s\nLength: %d\n\n",
+		int total_minutes = info.seq_data[0].duration / (1000 * 60);
+		int total_seconds = (info.seq_data[0].duration / 1000) % 60;
+
+		printf("Name: %s\nType: %s\nLength: %d patterns\nDuration: %dmin%ds\n",
 			   mod->name,
 			   mod->type,
-			   mod->len);
+			   mod->len,
+			   total_minutes,
+			   total_seconds);
 	}
+
 	printf(CONTROLS);
 }
 
