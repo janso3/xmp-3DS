@@ -158,16 +158,13 @@ void BottomView::RenderLoadMenu()
 		{
 			auto *entry = m_directory_listing[file_index];
 			bool is_dir = entry->d_type == DT_DIR;
-			printf("%s%c%.39s%s\x1b[K",
+			printf("%s%c%.39s%s",
 				   is_dir ? CONSOLE_CYAN : "",
 				   file_index == m_scroll ? '>' : ' ',
 				   entry->d_name,
 				   is_dir ? "/" CONSOLE_RESET : "");
 		}
-		else
-		{
-			printf("\x1b[2K");
-		}
+		printf("\x1b[K");
 	}
 }
 
@@ -235,7 +232,7 @@ void BottomView::RenderAbout()
 		if (formats[format] == NULL)
 			break;
 
-		printf("\x1b[%d;0H%s                                       ", i + 16, formats[format]);
+		printf("\x1b[%d;0H%s\x1b[K", i + 16, formats[format]);
 	}
 	m_scroll = std::min(m_scroll, i);
 	printf(CONSOLE_RESET);
