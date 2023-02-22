@@ -30,8 +30,11 @@ int Player::LogXmpError(int rc)
 		fprintf(stderr, "XMP: Incorrect player state\n");
 		break;
 	default:
-		break;
+		return rc;
 	}
+
+	consoleClear();
+	fprintf(stderr, "\nPress\n " CONSOLE_RED "A" CONSOLE_RESET " to try again\n " CONSOLE_RED "Up/Down" CONSOLE_RESET " to select another file");
 
 	return rc;
 }

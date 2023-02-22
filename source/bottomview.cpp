@@ -2,7 +2,7 @@
 #include "player.h"
 
 #include <stdio.h>
-#include <dirent.h>
+#include <string.h>
 #include <unistd.h>
 #include <xmp.h>
 
@@ -34,10 +34,12 @@ const std::array<const char *, 4> BottomView::m_tabs = {
 
 BottomView::BottomView()
 {
+	UpdateDirectoryListing();
 }
 
 BottomView::~BottomView()
 {
+	FreeDirectoryListing();
 }
 
 void BottomView::ScrollUp()
@@ -107,37 +109,26 @@ void BottomView::Update()
 
 bool BottomView::Select()
 {
-	bool did_load = false;
-	if (m_selection == 0)
+	if (m_selection != 0)
+		return false;
+
+	if (m_scroll >= m_directory_entries)
+		return false;
+
+	auto *entry = m_directory_listing[m_scroll];
+	if (entry->d_type == DT_DIR)
 	{
-		dirent *dir;
-		DIR *d = opendir(".");
-		if (!d)
-			return false;
-		int i = 0;
-		while ((dir = readdir(d)) != NULL)
+		if (!chdir(entry->d_name))
 		{
-			if (i == m_scroll)
-			{
-				if (dir->d_type == DT_DIR)
-				{
-					chdir(dir->d_name);
-					m_scroll = 0;
-				}
-				else
-				{
-					Player::the().LoadModule(dir->d_name);
-					did_load = true;
-				}
-				consoleClear();
-				Update();
-				break;
-			}
-			i++;
+			m_scroll = 0;
+			UpdateDirectoryListing();
+			Update();
 		}
-		closedir(d);
+		return false;
 	}
-	return did_load;
+
+	Player::the().LoadModule(entry->d_name);
+	return true;
 }
 
 void BottomView::GoBackDirectory()
@@ -147,39 +138,37 @@ void BottomView::GoBackDirectory()
 
 	if (!chdir(".."))
 	{
-		consoleClear();
 		m_scroll = 0;
+		UpdateDirectoryListing();
 		Update();
 	}
 }
 
 void BottomView::RenderLoadMenu()
 {
-	dirent *dir;
-	DIR *d = opendir(".");
-	if (!d)
-		return;
+	m_scroll = std::min(m_scroll, m_directory_entries - 1);
 
-	m_scroll = std::min(m_scroll, std::max(0, m_num_files - 1));
-
-	int i = 0, offset = std::max(0, m_scroll - 25);
-	while ((dir = readdir(d)) != NULL)
+	int row_offset = std::max(0, std::min(m_scroll - 13, m_directory_entries - 27));
+	for (int visual_row = 0; visual_row < 27; ++visual_row)
 	{
-		int visual_row = i - offset;
-		if (visual_row >= 0 && visual_row < 26)
+		int file_index = visual_row + row_offset;
+
+		printf("\x1b[%d;0H", visual_row + 1);
+		if (file_index < m_directory_entries)
 		{
-			bool is_dir = dir->d_type == DT_DIR;
-			printf("\x1b[%d;0H%s%c%s%s                                      ",
-				   visual_row + 1,
+			auto *entry = m_directory_listing[file_index];
+			bool is_dir = entry->d_type == DT_DIR;
+			printf("%s%c%.39s%s\x1b[K",
 				   is_dir ? CONSOLE_CYAN : "",
-				   i == m_scroll ? '>' : ' ',
-				   dir->d_name,
+				   file_index == m_scroll ? '>' : ' ',
+				   entry->d_name,
 				   is_dir ? "/" CONSOLE_RESET : "");
 		}
-		i++;
+		else
+		{
+			printf("\x1b[2K");
+		}
 	}
-	m_num_files = i;
-	closedir(d);
 }
 
 void BottomView::RenderInfo()
@@ -242,4 +231,50 @@ void BottomView::RenderAbout()
 	}
 	m_scroll = std::min(m_scroll, i);
 	printf(CONSOLE_RESET);
+}
+
+// We sort alphabetically, putting directories before files.
+static int MyDirentCompare(const dirent **a, const dirent **b)
+{
+	const auto t1 = (*a)->d_type;
+	const auto t2 = (*b)->d_type;
+
+	// FIXME: Can this be factored a bit nicer perhaps?
+	if (t1 == DT_DIR)
+	{
+		if (t2 == DT_DIR)
+			return strcoll((*a)->d_name, (*b)->d_name);
+		return -1;
+	}
+	else if (t2 == DT_DIR)
+	{
+		return 1;
+	}
+
+	return strcoll((*a)->d_name, (*b)->d_name);
+}
+
+bool BottomView::UpdateDirectoryListing()
+{
+	FreeDirectoryListing();
+
+	m_directory_entries = scandir(".", &m_directory_listing, NULL, MyDirentCompare);
+
+	if (m_directory_entries < 0)
+	{
+		m_directory_listing = NULL;
+		return false;
+	}
+
+	return true;
+}
+
+void BottomView::FreeDirectoryListing()
+{
+	if (m_directory_entries > 0)
+	{
+		for (int i = 0; i < m_directory_entries; ++i)
+			free(m_directory_listing[i]);
+		free(m_directory_listing);
+	}
 }
