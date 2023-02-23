@@ -37,8 +37,7 @@ BottomView::~BottomView()
 void BottomView::ScrollUp()
 {
 	auto &scroll = ScrollValue();
-	if (scroll)
-		scroll--;
+	scroll--;
 	Update();
 }
 
@@ -161,7 +160,10 @@ void BottomView::GoBackDirectory()
 void BottomView::RenderLoadMenu()
 {
 	auto &scroll = ScrollValue();
-	scroll = std::min(scroll, m_directory_entries - 1);
+	if (scroll < 0)
+		scroll = m_directory_entries - 1;
+	else if (scroll >= m_directory_entries - 1)
+		scroll = 0;
 
 	int row_offset = std::max(0, std::min(scroll - 13, m_directory_entries - 27));
 	for (int visual_row = 0; visual_row < 27; ++visual_row)
@@ -188,7 +190,11 @@ void BottomView::RenderControlMenu()
 	auto &player = Player::the();
 
 	auto &scroll = ScrollValue();
-	scroll = std::min(scroll, NUM_SETTINGS - 1);
+
+	if (scroll < 0)
+		scroll = NUM_SETTINGS - 1;
+	else if (scroll >= NUM_SETTINGS)
+		scroll = 0;
 
 	// Settings
 	printf("\x1b[0;0H" CONSOLE_RED "Select a setting with the D-pad\nChange setting with A\n\n" CONSOLE_RESET);
@@ -248,7 +254,7 @@ void BottomView::RenderInstruments()
 	int num_ins = info.mod->ins;
 
 	auto &scroll = ScrollValue();
-	scroll = std::min(scroll, std::max(0, num_ins - 28));
+	scroll = std::max(0, std::min(scroll, num_ins - 28));
 
 	for (int i = 0; i < 27; ++i)
 	{
@@ -281,7 +287,7 @@ void BottomView::RenderAbout()
 
 		printf("\x1b[%d;0H%s\x1b[K", i + 16, formats[format]);
 	}
-	scroll = std::min(scroll, i);
+	scroll = std::min(std::max(0, scroll), i);
 	printf(CONSOLE_RESET);
 }
 
