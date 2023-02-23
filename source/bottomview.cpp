@@ -62,7 +62,7 @@ void BottomView::PrevPage()
 		m_selection--;
 	else
 		m_selection = m_tabs.size() - 1;
-	consoleClear();
+	ClearTabView();
 	Update();
 }
 
@@ -72,7 +72,7 @@ void BottomView::NextPage()
 		m_selection++;
 	else
 		m_selection = 0;
-	consoleClear();
+	ClearTabView();
 	Update();
 }
 
@@ -239,6 +239,13 @@ void BottomView::RenderAbout()
 	}
 	scroll = std::min(scroll, i);
 	printf(CONSOLE_RESET);
+}
+
+void BottomView::ClearTabView()
+{
+	printf("\x1b[0;0H");
+	for (int i = 0; i < 27; ++i)
+		printf("\x1b[K\n");
 }
 
 // We sort alphabetically, putting directories before files.

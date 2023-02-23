@@ -37,6 +37,8 @@ private:
 	void RenderInstruments();
 	void RenderAbout();
 
+	void ClearTabView();
+
 	bool UpdateDirectoryListing();
 	void FreeDirectoryListing();
 
