@@ -26,7 +26,7 @@
 			   "  ###    ### ###       ### ###\n"        \
 			   "---------------------------------------\n"
 
-const std::array<const char *, 4> BottomView::m_tabs = {
+const std::array<const char *, BottomView::NUM_TABS> BottomView::m_tabs = {
 	"[Load]",
 	"[Info]",
 	"[Inst]",
@@ -44,14 +44,15 @@ BottomView::~BottomView()
 
 void BottomView::ScrollUp()
 {
-	if (m_scroll)
-		m_scroll--;
+	auto &scroll = ScrollValue();
+	if (scroll)
+		scroll--;
 	Update();
 }
 
 void BottomView::ScrollDown()
 {
-	m_scroll++;
+	ScrollValue()++;
 	Update();
 }
 
@@ -61,7 +62,6 @@ void BottomView::PrevPage()
 		m_selection--;
 	else
 		m_selection = m_tabs.size() - 1;
-	m_scroll = 0;
 	consoleClear();
 	Update();
 }
@@ -72,7 +72,6 @@ void BottomView::NextPage()
 		m_selection++;
 	else
 		m_selection = 0;
-	m_scroll = 0;
 	consoleClear();
 	Update();
 }
@@ -81,16 +80,16 @@ void BottomView::Update()
 {
 	switch (m_selection)
 	{
-	case 0:
+	case Tab::LOAD:
 		RenderLoadMenu();
 		break;
-	case 1:
+	case Tab::INFO:
 		RenderInfo();
 		break;
-	case 2:
+	case Tab::INSTRUMENTS:
 		RenderInstruments();
 		break;
-	case 3:
+	case Tab::ABOUT:
 		RenderAbout();
 		break;
 	default:
@@ -109,18 +108,19 @@ void BottomView::Update()
 
 bool BottomView::Select()
 {
-	if (m_selection != 0)
+	if (m_selection != Tab::LOAD)
 		return false;
 
-	if (m_scroll >= m_directory_entries)
+	auto &scroll = ScrollValue();
+	if (scroll >= m_directory_entries)
 		return false;
 
-	auto *entry = m_directory_listing[m_scroll];
+	auto *entry = m_directory_listing[scroll];
 	if (entry->d_type == DT_DIR)
 	{
 		if (!chdir(entry->d_name))
 		{
-			m_scroll = 0;
+			scroll = 0;
 			UpdateDirectoryListing();
 			Update();
 		}
@@ -133,12 +133,12 @@ bool BottomView::Select()
 
 void BottomView::GoBackDirectory()
 {
-	if (m_selection != 0)
+	if (m_selection != Tab::LOAD)
 		return;
 
 	if (!chdir(".."))
 	{
-		m_scroll = 0;
+		ScrollValue() = 0;
 		UpdateDirectoryListing();
 		Update();
 	}
@@ -146,9 +146,10 @@ void BottomView::GoBackDirectory()
 
 void BottomView::RenderLoadMenu()
 {
-	m_scroll = std::min(m_scroll, m_directory_entries - 1);
+	auto &scroll = ScrollValue();
+	scroll = std::min(scroll, m_directory_entries - 1);
 
-	int row_offset = std::max(0, std::min(m_scroll - 13, m_directory_entries - 27));
+	int row_offset = std::max(0, std::min(scroll - 13, m_directory_entries - 27));
 	for (int visual_row = 0; visual_row < 27; ++visual_row)
 	{
 		int file_index = visual_row + row_offset;
@@ -160,7 +161,7 @@ void BottomView::RenderLoadMenu()
 			bool is_dir = entry->d_type == DT_DIR;
 			printf("%s%c%.39s%s",
 				   is_dir ? CONSOLE_CYAN : "",
-				   file_index == m_scroll ? '>' : ' ',
+				   file_index == scroll ? '>' : ' ',
 				   entry->d_name,
 				   is_dir ? "/" CONSOLE_RESET : "");
 		}
@@ -202,11 +203,12 @@ void BottomView::RenderInstruments()
 	xmp_instrument *xxi = info.mod->xxi;
 	int num_ins = info.mod->ins;
 
-	m_scroll = std::min(m_scroll, std::max(0, num_ins - 28));
+	auto &scroll = ScrollValue();
+	scroll = std::min(scroll, std::max(0, num_ins - 28));
 
 	for (int i = 0; i < 27; ++i)
 	{
-		int ins = i + m_scroll;
+		int ins = i + scroll;
 		if (ins >= num_ins)
 			break;
 
@@ -224,17 +226,18 @@ void BottomView::RenderAbout()
 	printf("\x1b[0;0H" BANNER
 		   "\nXmp Mod Player\nVersion %s\nLibrary written by Claudio Matsuoka\n3DS front-end by Julian Offenhaeuser\n\nSupported formats:\n" CONSOLE_CYAN,
 		   xmp_version);
+	auto &scroll = ScrollValue();
 	auto formats = xmp_get_format_list();
 	int i;
 	for (i = 0; i < 12; ++i)
 	{
-		int format = i + m_scroll;
+		int format = i + scroll;
 		if (formats[format] == NULL)
 			break;
 
 		printf("\x1b[%d;0H%s\x1b[K", i + 16, formats[format]);
 	}
-	m_scroll = std::min(m_scroll, i);
+	scroll = std::min(scroll, i);
 	printf(CONSOLE_RESET);
 }
 

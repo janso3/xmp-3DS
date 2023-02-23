@@ -21,6 +21,17 @@ public:
 	void NextPage();
 
 private:
+	enum Tab : int
+	{
+		LOAD = 0,
+		INFO,
+		INSTRUMENTS,
+		ABOUT,
+		NUM_TABS
+	};
+
+	int &ScrollValue() { return m_scroll.at(m_selection); }
+
 	void RenderLoadMenu();
 	void RenderInfo();
 	void RenderInstruments();
@@ -31,11 +42,11 @@ private:
 
 	xmp_module_info *m_info;
 
-	static const std::array<const char *, 4> m_tabs;
+	static const std::array<const char *, NUM_TABS> m_tabs;
 
 	dirent **m_directory_listing{nullptr};
 	int m_directory_entries{0};
 
-	int m_scroll{0};
+	std::array<int, NUM_TABS> m_scroll;
 	int m_selection{0};
 };
