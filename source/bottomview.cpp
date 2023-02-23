@@ -9,14 +9,6 @@
 #include <algorithm>
 #include <string>
 
-#define CONTROLS CONSOLE_RED "Controls:\n"                             \
-							 "Start: Exit the app\n"                   \
-							 "Select: Toggle pause\n"                  \
-							 "D-pad up/down: Navigate bottom screen\n" \
-							 "D-pad left/right: Scroll pattern view\n" \
-							 "A: Load file or move into folder\n"      \
-							 "B: Move to the previous folder\n" CONSOLE_RESET
-
 #define BANNER "  :::    ::: ::::    ::::  :::::::::\n"  \
 			   "  :+:    :+: +:+:+: :+:+:+ :+:    :+:\n" \
 			   "   +:+  +:+  +:+ +:+:+ +:+ +:+    +:+\n" \
@@ -28,7 +20,7 @@
 
 const std::array<const char *, BottomView::NUM_TABS> BottomView::m_tabs = {
 	"[Load]",
-	"[Info]",
+	"[Ctrl]",
 	"[Inst]",
 	"[About]"};
 
@@ -83,8 +75,8 @@ void BottomView::Update()
 	case Tab::LOAD:
 		RenderLoadMenu();
 		break;
-	case Tab::INFO:
-		RenderInfo();
+	case Tab::CTRL:
+		RenderControlMenu();
 		break;
 	case Tab::INSTRUMENTS:
 		RenderInstruments();
@@ -108,27 +100,49 @@ void BottomView::Update()
 
 bool BottomView::Select()
 {
-	if (m_selection != Tab::LOAD)
-		return false;
-
 	auto &scroll = ScrollValue();
-	if (scroll >= m_directory_entries)
-		return false;
+	auto &player = Player::the();
 
-	auto *entry = m_directory_listing[scroll];
-	if (entry->d_type == DT_DIR)
+	if (m_selection == Tab::LOAD)
 	{
-		if (!chdir(entry->d_name))
+		if (scroll >= m_directory_entries)
+			return false;
+
+		auto *entry = m_directory_listing[scroll];
+		if (entry->d_type == DT_DIR)
 		{
-			scroll = 0;
-			UpdateDirectoryListing();
-			Update();
+			if (!chdir(entry->d_name))
+			{
+				scroll = 0;
+				UpdateDirectoryListing();
+				Update();
+			}
+			return false;
 		}
-		return false;
+
+		player.LoadModule(entry->d_name);
+		return true;
+	}
+	else if (m_selection == Tab::CTRL)
+	{
+		switch (scroll)
+		{
+		case SUBSONG:
+			player.NextSubsong();
+			break;
+		case LOOP:
+			player.ToggleLooping();
+			break;
+		case PLAYBACK:
+			player.ToggleStereo();
+			break;
+		default:
+			break;
+		}
+		Update();
 	}
 
-	Player::the().LoadModule(entry->d_name);
-	return true;
+	return false;
 }
 
 void BottomView::GoBackDirectory()
@@ -169,28 +183,58 @@ void BottomView::RenderLoadMenu()
 	}
 }
 
-void BottomView::RenderInfo()
+void BottomView::RenderControlMenu()
 {
-	printf("\x1b[0;0H");
-
 	auto &player = Player::the();
+
+	auto &scroll = ScrollValue();
+	scroll = std::min(scroll, NUM_SETTINGS - 1);
+
+	// Settings
+	printf("\x1b[0;0H" CONSOLE_RED "Select a setting with the D-pad\nChange setting with A\n\n" CONSOLE_RESET);
+
+	auto PrintSelection = [&](int i)
+	{
+		if (i == scroll)
+			printf("\x1b[47;30m");
+	};
+
+	// FIXME: Allow subsong selection
+	PrintSelection(SUBSONG);
+	printf("Subsong : ");
+	if (player.HasLoadedModule())
+	{
+		auto info = player.GetModuleInfo();
+
+		int subsong = player.GetSubsongIndex();
+		int total_minutes = info.seq_data[subsong].duration / (1000 * 60);
+		int total_seconds = (info.seq_data[subsong].duration / 1000) % 60;
+
+		printf("Index %d (%dmin%ds)",
+			   subsong,
+			   total_minutes,
+			   total_seconds);
+	}
+	printf(CONSOLE_RESET "\x1b[K\n");
+
+	PrintSelection(PLAYBACK);
+	printf("Playback: %s\x1b[K\n" CONSOLE_RESET, player.IsStereo() ? "Stereo" : "Mono");
+
+	PrintSelection(LOOP);
+	printf("Loop    : %s\x1b[K\n" CONSOLE_RESET, player.IsLooping() ? "Yes" : "No");
+
 	if (player.HasLoadedModule())
 	{
 		auto info = player.GetModuleInfo();
 		auto *mod = info.mod;
 
-		int total_minutes = info.seq_data[0].duration / (1000 * 60);
-		int total_seconds = (info.seq_data[0].duration / 1000) % 60;
-
-		printf("Name: %s\nType: %s\nLength: %d patterns\nDuration: %dmin%ds\n",
-			   mod->name,
-			   mod->type,
-			   mod->len,
-			   total_minutes,
-			   total_seconds);
+		printf(
+			CONSOLE_RED "\n|------------ Module info -------------|\n" CONSOLE_RESET
+						"Name: %s\nType: %s\nLength: %d patterns\n\n",
+			mod->name,
+			mod->type,
+			mod->len);
 	}
-
-	printf(CONTROLS);
 }
 
 void BottomView::RenderInstruments()

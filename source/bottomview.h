@@ -24,16 +24,24 @@ private:
 	enum Tab : int
 	{
 		LOAD = 0,
-		INFO,
+		CTRL,
 		INSTRUMENTS,
 		ABOUT,
 		NUM_TABS
 	};
 
+	enum Setting : int
+	{
+		SUBSONG,
+		PLAYBACK,
+		LOOP,
+		NUM_SETTINGS
+	};
+
 	int &ScrollValue() { return m_scroll.at(m_selection); }
 
 	void RenderLoadMenu();
-	void RenderInfo();
+	void RenderControlMenu();
 	void RenderInstruments();
 	void RenderAbout();
 

@@ -50,7 +50,14 @@ void Player::AudioCallback(void *user_data)
 	{
 		size_t size = wave_buf[fill_block].nsamples * sizeof(int16_t) * 2;
 		if (player->m_playing)
-			xmp_play_buffer(player->m_xmp_ctx, wave_buf[fill_block].data_pcm16, size, 0);
+		{
+			int rc = xmp_play_buffer(player->m_xmp_ctx, wave_buf[fill_block].data_pcm16, size, !player->m_looping);
+			if (rc == -XMP_END && !player->m_looping)
+			{
+				xmp_restart_module(player->m_xmp_ctx);
+				player->m_playing = false;
+			}
+		}
 		DSP_FlushDataCache(wave_buf[fill_block].data_pcm16, size);
 		ndspChnWaveBufAdd(0, &wave_buf[fill_block]);
 		fill_block ^= 1;
@@ -122,9 +129,32 @@ bool Player::LoadModule(const char *path)
 
 void Player::TogglePause()
 {
+	m_playing = !m_playing;
 	if (m_has_loaded_module)
-	{
 		memset(m_audio_buffer, 0, AUDIO_SAMPLESPERBUF * sizeof(int16_t) * 2 * 2);
-		m_playing = !m_playing;
-	}
+}
+
+void Player::ToggleLooping()
+{
+	m_looping = !m_looping;
+}
+
+void Player::ToggleStereo()
+{
+	m_stereo = !m_stereo;
+	if (m_has_loaded_module)
+		ndspSetOutputMode(m_stereo ? NDSP_OUTPUT_STEREO : NDSP_OUTPUT_MONO);
+}
+
+void Player::NextSubsong()
+{
+	if (!m_has_loaded_module)
+		return;
+
+	if (m_subsong >= m_module_info.num_sequences - 1)
+		m_subsong = 0;
+	else
+		m_subsong++;
+
+	xmp_set_position(m_xmp_ctx, m_module_info.seq_data[m_subsong].entry_point);
 }
