@@ -117,7 +117,7 @@ bool Player::LoadModule(const char *path)
 		m_has_loaded_module = false;
 	}
 
-	if (LogXmpError(xmp_load_module(m_xmp_ctx, path)) != 0)
+	if (LogXmpError(xmp_load_module(m_xmp_ctx, const_cast<char*>(path))) != 0)
 		return false;
 
 	xmp_start_player(m_xmp_ctx, AUDIO_SPS, 0);
