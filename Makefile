@@ -73,7 +73,7 @@ LIBS	:= -lctru -lxmp -lm
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB)
+LIBDIRS	:= $(CTRULIB) ${PORTLIBS}
 
 
 #---------------------------------------------------------------------------------
