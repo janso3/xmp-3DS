@@ -162,7 +162,7 @@ void BottomView::RenderLoadMenu()
 	auto &scroll = ScrollValue();
 	if (scroll < 0)
 		scroll = m_directory_entries - 1;
-	else if (scroll >= m_directory_entries - 1)
+	else if (scroll >= m_directory_entries)
 		scroll = 0;
 
 	int row_offset = std::max(0, std::min(scroll - 13, m_directory_entries - 27));
