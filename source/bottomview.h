@@ -58,5 +58,5 @@ private:
 	int m_directory_entries{0};
 
 	std::array<int, NUM_TABS> m_scroll;
-	int m_selection{0};
+	size_t m_selection{0};
 };

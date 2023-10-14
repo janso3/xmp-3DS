@@ -91,7 +91,7 @@ void BottomView::Update()
 	printf("\x1b[28;0H|------ Press L/R to switch tabs ------|\n");
 	for (size_t i = 0; i < m_tabs.size(); ++i)
 	{
-		if (m_selection == (int)i)
+		if (m_selection == i)
 			printf(CONSOLE_MAGENTA);
 		printf("%s " CONSOLE_RESET, m_tabs[i]);
 	}
@@ -263,7 +263,7 @@ void BottomView::RenderInstruments()
 			break;
 
 		printf("\x1b[%d;0H%02d: ", i + 1, ins);
-		for (int j = 0; j < sizeof(xmp_instrument::name); ++j)
+		for (size_t j = 0; j < sizeof(xmp_instrument::name); ++j)
 		{
 			char c = xxi[ins].name[j];
 			printf("%c", c ? c : ' ');
